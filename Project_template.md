@@ -103,6 +103,17 @@
 Необходимые тесты для проверки этого API вызываются при запуске npm run test:local из папки tests/postman 
 Приложите скриншот тестов и скриншот состояния топиков Kafka http://localhost:8090 
 
+**Что сделано:**
+- Proxy Service. Позволяет управлять распределением трафика. Протестировал его работу вручную.
+- Event Service. Позволяет проверить гипотезу применение Kafka.
+
+**Cкриншоты:**
+- [Cкриншот логов Proxy](/screenshots/task2/proxy_movies.png)
+- [Cкриншот тестов](/screenshots/task2/newman_test_results.png)
+- [Cкриншот всех топиков Kafka](/screenshots/task2/kafka_topics_all.png)
+- [Cкриншот топика Kafka movie-events](/screenshots/task2/kafka_topics_movie-events.png)
+- [Cкриншот топика Kafka payment-events](/screenshots/task2/kafka_topics_payment-events.png)
+- [Cкриншот топика Kafka user-events](/screenshots/task2/kafka_topics_user-events.png)
 
 ## Задание 3
 
