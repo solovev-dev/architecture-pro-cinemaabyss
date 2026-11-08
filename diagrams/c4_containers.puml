@@ -1,0 +1,95 @@
+@startuml Cinema_Platform_Containers
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+title Cinema Platform  — C4 Containers\nКинобездна (To-Be)
+
+LAYOUT_TOP_DOWN()
+LAYOUT_WITH_LEGEND()
+
+' =========================================================
+' PERSONS
+' =========================================================
+Person(user, "Пользователь", "Пользуется стриминговой платформой на разных устройствах - Web/Mobile/TV")
+
+System_Ext(PaymentSystem, "Платёжная система", "Обработка платежей")
+System_Ext(RecommendationSystem, "Рекомендательная система", "Персональные подборки фильмов")
+System_Ext(PartnerSystem, "Онлайн-кинотеатры", "Партнеры (источники видео-контента)")
+System_Ext(StorageS3, "S3 Storage", "Хранение контента")
+
+System_Boundary(Cinema_Platform, "Стриминговая платформа(агрегатор)") {
+    Container(ApiGateway, "API Gateway", "Go", "Точка входа. Маршрутизация запросов")
+    Container(BFF, "Web/Mobile/TV BFF", "Python", "Свой BFF для мобильных-платформ/ веб-платформ/ TV-платформ")
+
+    Container(Monolith, "Monolith (Legacy)", "Go", "Текущий монолита: пользователи, подписки, платежи, избранное")
+
+    Container(MoviesService, "Movie Service", "Go", "Каталог фильмов метаданных о фильмах: жанры, актёры, описания, оценки")
+    Container(SubscriptionsService, "Subscription Service", "Go", "Управление подпиской: создание, настройка")
+    Container(UsersService, "User Service", "Go", "Профиль пользователя")
+
+    Container(PartnerService, "Partners Service", "Go", "ACL онлайн-кинотеатров (партнеров)")
+    Container(RecommendationService, "Recommendations Service", "Go", "Адаптер к системе рекомендаций")
+
+    ContainerDb(MoviesDB, "Movies DB", "PostgreSQL", "Мета-данные о фильмах, актерах, каталоге")
+    ContainerDb(SubscriptionsDB, "Subscriptions DB", "PostgreSQL", "Информация о подписках")
+    ContainerDb(UsersDB, "Users DB", "PostgreSQL", "Пользователи, истории просмотров, избранное")
+    ContainerDb(MonolithDB, "Monolith DB", "PostgreSQL", "Пользователи, подписки, фильмы")
+}
+
+' =========================================================
+' RELATIONS — Users
+' =========================================================
+Rel(user, ApiGateway, "Смотрит фильмы, оценивает, управляет подпиской", "HTTPS")
+
+' =========================================================
+' RELATIONS — API Gateway
+' =========================================================
+Rel_R(ApiGateway, Monolith, "Запросы в Legacy", "HTTP")
+Rel(ApiGateway, BFF, "Запросы с веб-а", "HTTP")
+
+' =========================================================
+' RELATIONS — BFF ↔ Services
+' =========================================================
+Rel(BFF, MoviesService, "Работа с каталогом фильмов", "HTTP")
+Rel(BFF, SubscriptionsService, "Управление подпиской", "HTTP")
+Rel(BFF, UsersService, "Работа с профилем пользователя", "HTTP")
+Rel(BFF, RecommendationService, "Получение рекомендаций", "HTTP")
+
+' =========================================================
+' RELATIONS — Services ↔ Databases
+' =========================================================
+Rel_D(Monolith, MonolithDB, "R/W", "SQL")
+Rel_D(MoviesService, MoviesDB, "R/W", "SQL")
+Rel_D(SubscriptionsService, SubscriptionsDB, "R/W", "SQL")
+Rel_D(UsersService, UsersDB, "R/W", "SQL")
+
+
+' =========================================================
+' RELATIONS — Services ↔ Services
+' =========================================================
+Rel(UsersService, RecommendationService, "UserWatchedEvent\nUserAddFavoriteEvent", "Kafka")
+Rel_L(UsersService, MoviesService, "UserWatchedEvent", "Kafka")
+Rel(UsersService, PartnerService, "Генерация Playback URL", "HTTP")
+Rel_L(SubscriptionsService, UsersService, "SubscriptionCreatedEvent\nSubscriptionUpdatedEvent", "Kafka")
+Rel(MoviesService, PartnerService, "Синхронизация каталога фильмов\n(батч-выгрузки мета данных)", "HTTP")
+
+' =========================================================
+' RELATIONS — Services ↔ Externals
+' =========================================================
+Rel_R(SubscriptionsService, PaymentSystem, "Оплата", "HTTPS")
+Rel_R(RecommendationService, RecommendationSystem, "Получение рекомендаций", "RabbitMQ")
+Rel_R(PartnerService, PartnerSystem, "Получение данных из API онлайн кинотеатров", "HTTPS")
+
+' =========================================================
+' RELATIONS — Monolith
+' =========================================================
+Rel(Monolith, PaymentSystem, "Оплата", "HTTPS")
+Rel_R(Monolith, RecommendationSystem , "Получение рекомендаций", "RabbitMQ")
+Rel(Monolith, PartnerSystem, "Получение мета-данных", "HTTPS")
+Rel_U(Monolith, StorageS3, "Получение контента", "HTTPS")
+
+
+Lay_D(UsersDB, PartnerService)
+Lay_D(UsersDB, PartnerService)
+Lay_D(PartnerService, RecommendationService)
+Lay_D(PartnerService, RecommendationService)
+@enduml

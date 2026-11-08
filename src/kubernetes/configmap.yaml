@@ -17,3 +17,6 @@ data:
   # Strangler Fig configuration
   GRADUAL_MIGRATION: "true"
   MOVIES_MIGRATION_PERCENT: "100"
+
+  # Kafka
+  KAFKA_BROKERS: "kafka:9092"
