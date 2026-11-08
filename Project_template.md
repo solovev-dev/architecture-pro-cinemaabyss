@@ -492,6 +492,10 @@ You can see 21 for the upstream_rq_pending_overflow value which means 21 calls s
 
 Приложите скриншот работы circuit breaker'а
 
+**Результаты:**
+- [Итог запуска](/screenshots/task5/circuit-breaker-result.png)
+- [Статистик](/screenshots/task5/circuit-breaker-stat.png)
+
 Удаляем все
 ```bash
 istioctl uninstall --purge
